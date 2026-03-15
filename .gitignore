@@ -1,0 +1,65 @@
+# --- Backend (ASP.NET Core) ---
+bin/
+obj/
+.vs/
+*.user
+*.suo
+*.cache
+*.dll
+*.exe
+*.pdb
+*.log
+packages/
+[Dd]ebug/
+[Rr]elease/
+appsettings.Development.json
+appsettings.*.local.json
+*.db
+*.db-shm
+*.db-wal
+
+# --- Frontend (Vue / Node) ---
+node_modules/
+dist/
+.npm
+.env
+.env.local
+.env.*.local
+*.local
+.DS_Store
+coverage/
+.cypress/
+
+# --- Mobile (Flutter) ---
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.pub-cache/
+.pub/
+build/
+*.iml
+*.ipr
+*.iws
+.android/
+.idea/
+*.jks
+*.keystore
+key.properties
+*.g.dart
+*.freezed.dart
+
+# --- Genel ---
+*.log
+*.tmp
+*.temp
+Thumbs.db
+.DS_Store
+*.swp
+*.swo
+*~
+
+# --- IDE / Cursor ---
+.cursor/
+
+# --- Plan / yerel notlar (opsiyonel: planı takip için tutmak istersen bu satırı sil)
+# .cursor/plans/
