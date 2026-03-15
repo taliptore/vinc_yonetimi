@@ -116,7 +116,7 @@ public class JobsController : ControllerBase
         _db.OperatorDailyWorks.Add(new OperatorDailyWork
         {
             JobId = id,
-            OperatorId = user.OperatorId.Value,
+            OperatorId = user.OperatorId!.Value,
             WorkDate = today,
             StartTime = now,
             EndTime = TimeSpan.Zero,

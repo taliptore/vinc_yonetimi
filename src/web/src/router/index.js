@@ -19,6 +19,8 @@ const routes = [
       { path: 'operators', name: 'Operators', meta: { title: 'Operatörler', roles: ['Admin'] }, component: () => import('../views/OperatorsView.vue') },
       { path: 'sites', name: 'Sites', meta: { title: 'Şantiyeler', roles: ['Admin', 'Muhasebe'] }, component: () => import('../views/SitesView.vue') },
       { path: 'jobs', name: 'Jobs', meta: { title: 'İşler' }, component: () => import('../views/JobsView.vue') },
+      { path: 'reports', name: 'Reports', meta: { title: 'Raporlar', roles: ['Admin', 'Muhasebe'] }, component: () => import('../views/ReportsView.vue') },
+      { path: 'tenants', name: 'Tenants', meta: { title: 'Yeni Firma (Tenant)', roles: ['Admin'] }, component: () => import('../views/TenantsView.vue') },
     ],
   },
 ]

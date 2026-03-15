@@ -16,6 +16,8 @@ const menuItems = computed(() => {
     { path: '/operators', label: 'Operatörler', roles: ['Admin'] },
     { path: '/sites', label: 'Şantiyeler', roles: ['Admin', 'Muhasebe'] },
     { path: '/jobs', label: 'İşler', roles: ['Admin', 'Muhasebe', 'Operatör', 'Firma'] },
+    { path: '/reports', label: 'Raporlar', roles: ['Admin', 'Muhasebe'] },
+    { path: '/tenants', label: 'Yeni Firma', roles: ['Admin'] },
   ]
   return items.filter((i) => i.roles.includes(role))
 })
