@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using VincYonetim.Api.Data;
@@ -15,11 +16,13 @@ public class JobsController : ControllerBase
 {
     private readonly ApplicationDbContext _db;
     private readonly ICurrentTenant _tenant;
+    private readonly IWebHostEnvironment _env;
 
-    public JobsController(ApplicationDbContext db, ICurrentTenant tenant)
+    public JobsController(ApplicationDbContext db, ICurrentTenant tenant, IWebHostEnvironment env)
     {
         _db = db;
         _tenant = tenant;
+        _env = env;
     }
 
     [HttpGet]
@@ -153,6 +156,59 @@ public class JobsController : ControllerBase
         work.OvertimeHours = (decimal)Math.Max(0, Math.Round(totalHours - 8, 2));
         await _db.SaveChangesAsync(ct);
         return Ok(new { message = "İş bitirildi.", totalHours = work.TotalHours, overtimeHours = work.OvertimeHours });
+    }
+
+    /// <summary>İşin fotoğraflarını listele.</summary>
+    [HttpGet("{id:int}/photos")]
+    public async Task<ActionResult<List<object>>> GetPhotos(int id, CancellationToken ct)
+    {
+        if (!_tenant.TenantId.HasValue) return Unauthorized();
+        var job = await _db.Jobs.FirstOrDefaultAsync(j => j.Id == id && j.TenantId == _tenant.TenantId, ct);
+        if (job == null) return NotFound();
+        var list = await _db.JobPhotos
+            .Where(p => p.JobId == id)
+            .OrderByDescending(p => p.UploadedAt)
+            .Select(p => new { p.Id, p.FilePath, p.UploadedBy, p.UploadedAt })
+            .ToListAsync(ct);
+        return Ok(list);
+    }
+
+    /// <summary>İşe fotoğraf yükle (Operatör kendi işine, Admin tüm işlere).</summary>
+    [HttpPost("{id:int}/photos")]
+    [Authorize(Roles = "Admin,Operatör")]
+    public async Task<ActionResult<object>> UploadPhoto(int id, IFormFile file, CancellationToken ct)
+    {
+        if (!_tenant.TenantId.HasValue || !_tenant.UserId.HasValue) return Unauthorized();
+        var job = await _db.Jobs.FirstOrDefaultAsync(j => j.Id == id && j.TenantId == _tenant.TenantId, ct);
+        if (job == null) return NotFound();
+        if (_tenant.Role == "Operatör")
+        {
+            var user = await _db.Users.FirstOrDefaultAsync(u => u.Id == _tenant.UserId && u.OperatorId == job.OperatorId, ct);
+            if (user == null) return Forbid();
+        }
+        if (file == null || file.Length == 0) return BadRequest(new { message = "Dosya seçin." });
+        var ext = Path.GetExtension(file.FileName).ToLowerInvariant();
+        if (string.IsNullOrEmpty(ext) || (ext != ".jpg" && ext != ".jpeg" && ext != ".png" && ext != ".gif"))
+            return BadRequest(new { message = "Sadece resim (jpg, png, gif) yüklenebilir." });
+        var webRoot = _env.WebRootPath ?? Path.Combine(_env.ContentRootPath, "wwwroot");
+        var dir = Path.Combine(webRoot, "uploads", "jobs", id.ToString());
+        Directory.CreateDirectory(dir);
+        var fileName = $"{Guid.NewGuid():N}{ext}";
+        var fullPath = Path.Combine(dir, fileName);
+        await using (var stream = new FileStream(fullPath, FileMode.Create))
+            await file.CopyToAsync(stream, ct);
+        var relativePath = $"uploads/jobs/{id}/{fileName}";
+        var userEntity = await _db.Users.FirstOrDefaultAsync(u => u.Id == _tenant.UserId, ct);
+        var photo = new JobPhoto
+        {
+            JobId = id,
+            FilePath = relativePath,
+            UploadedBy = userEntity?.OperatorId,
+            UploadedAt = DateTime.UtcNow,
+        };
+        _db.JobPhotos.Add(photo);
+        await _db.SaveChangesAsync(ct);
+        return Ok(new { id = photo.Id, filePath = relativePath, uploadedAt = photo.UploadedAt });
     }
 
     private static double HaversineDistance(double lat1, double lon1, double lat2, double lon2)

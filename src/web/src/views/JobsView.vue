@@ -18,6 +18,11 @@ const form = ref({
   startDate: '', endDate: '', dailyRentPrice: 0,
 })
 const saving = ref(false)
+const showPhotos = ref(false)
+const photosJobId = ref(null)
+const photosList = ref([])
+const photosLoading = ref(false)
+const photoUploading = ref(false)
 
 async function load() {
   loading.value = true
@@ -72,6 +77,40 @@ async function remove(id) {
   await api.delete(`/jobs/${id}`)
   load()
 }
+
+async function openPhotos(jobId) {
+  photosJobId.value = jobId
+  showPhotos.value = true
+  photosList.value = []
+  photosLoading.value = true
+  try {
+    const { data } = await api.get(`/jobs/${jobId}/photos`)
+    photosList.value = data || []
+  } finally {
+    photosLoading.value = false
+  }
+}
+
+function photoUrl(filePath) {
+  if (!filePath) return ''
+  return filePath.startsWith('/') ? filePath : '/' + filePath
+}
+
+async function onPhotoFileChange(e, jobId) {
+  const file = e.target?.files?.[0]
+  if (!file || !jobId) return
+  photoUploading.value = true
+  try {
+    const form = new FormData()
+    form.append('file', file)
+    await api.post(`/jobs/${jobId}/photos`, form, { headers: { 'Content-Type': 'multipart/form-data' } })
+    const { data } = await api.get(`/jobs/${jobId}/photos`)
+    photosList.value = data || []
+  } finally {
+    photoUploading.value = false
+    e.target.value = ''
+  }
+}
 </script>
 
 <template>
@@ -105,6 +144,7 @@ async function remove(id) {
             <td>{{ row.endDate?.slice(0, 10) }}</td>
             <td>{{ row.dailyRentPrice?.toLocaleString('tr-TR') }}</td>
             <td>
+              <button type="button" class="btn small" @click="openPhotos(row.id)">Fotoğraflar</button>
               <button v-if="canEdit" type="button" class="btn small" @click="openEdit(row)">Düzenle</button>
               <button v-if="canEdit" type="button" class="btn small danger" @click="remove(row.id)">Sil</button>
             </td>
@@ -147,10 +187,39 @@ async function remove(id) {
         </form>
       </div>
     </div>
+    <div v-if="showPhotos" class="modal" @click.self="showPhotos = false">
+      <div class="modal-content photos-modal">
+        <h3>İş #{{ photosJobId }} – Fotoğraflar</h3>
+        <p v-if="photosLoading">Yükleniyor...</p>
+        <template v-else>
+          <div class="photos-upload">
+            <label class="btn primary">Yeni yükle <input type="file" accept="image/*" class="hidden" :disabled="photoUploading" @change="onPhotoFileChange($event, photosJobId)" /></label>
+            <span v-if="photoUploading" class="muted">Yükleniyor...</span>
+          </div>
+          <div class="photos-grid">
+            <a v-for="p in photosList" :key="p.id" :href="photoUrl(p.filePath)" target="_blank" rel="noopener" class="photo-thumb">
+              <img :src="photoUrl(p.filePath)" :alt="'Fotoğraf ' + p.id" />
+              <span class="date">{{ p.uploadedAt?.slice(0, 16)?.replace('T', ' ') }}</span>
+            </a>
+          </div>
+          <p v-if="photosList.length === 0" class="muted">Henüz fotoğraf yok.</p>
+        </template>
+        <button type="button" class="btn" style="margin-top: 1rem;" @click="showPhotos = false">Kapat</button>
+      </div>
+    </div>
   </div>
 </template>
 
 <style scoped>
+.hidden { position: absolute; opacity: 0; width: 0; height: 0; }
+.photos-modal { min-width: 520px; max-width: 90vw; }
+.photos-upload { margin-bottom: 1rem; }
+.photos-upload label { cursor: pointer; }
+.photos-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 0.75rem; }
+.photo-thumb { display: block; border: 1px solid #eee; border-radius: 8px; overflow: hidden; text-decoration: none; color: inherit; }
+.photo-thumb img { width: 100%; height: 100px; object-fit: cover; display: block; }
+.photo-thumb .date { display: block; font-size: 0.7rem; padding: 0.25rem; color: #666; }
+.muted { color: #888; }
 .page { max-width: 100%; }
 .toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
 .toolbar h2 { margin: 0; font-size: 1.25rem; }

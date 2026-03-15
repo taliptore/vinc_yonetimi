@@ -6,6 +6,7 @@ public class User
     public int TenantId { get; set; }
     public int RoleId { get; set; }
     public string Email { get; set; } = string.Empty;
+    public string? DisplayName { get; set; }
     public string PasswordHash { get; set; } = string.Empty;
     public string? PasswordResetToken { get; set; }
     public DateTime? PasswordResetTokenExpiry { get; set; }

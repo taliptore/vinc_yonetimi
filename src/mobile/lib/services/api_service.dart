@@ -89,4 +89,19 @@ class ApiService {
     );
     if (r.statusCode != 200 && r.statusCode != 201) throw Exception('Arıza bildirimi gönderilemedi');
   }
+
+  /// İşe fotoğraf yükle (dosya yolu - image_picker ile alınan path).
+  Future<void> uploadJobPhoto(int jobId, String filePath) async {
+    final token = await _getToken();
+    final request = http.MultipartRequest(
+      'POST',
+      Uri.parse('$_baseUrl/jobs/$jobId/photos'),
+    );
+    if (token != null) request.headers['Authorization'] = 'Bearer $token';
+    request.files.add(await http.MultipartFile.fromPath('file', filePath));
+    final streamed = await request.send();
+    final r = await http.Response.fromStream(streamed);
+    final body = r.body.isNotEmpty ? jsonDecode(r.body) as Map<String, dynamic>? : null;
+    if (r.statusCode != 200) throw Exception(body?['message'] ?? 'Fotoğraf yüklenemedi');
+  }
 }

@@ -43,6 +43,18 @@ public class DashboardController : ControllerBase
                 .Where(m => m.TenantId == tenantId && m.MaintenanceDate >= monthStart)
                 .SumAsync(m => m.Cost ?? 0, ct);
 
+            var monthlyBreakdown = new List<object>();
+            for (var i = 5; i >= 0; i--)
+            {
+                var d = DateTime.Today.AddMonths(-i);
+                var start = new DateTime(d.Year, d.Month, 1);
+                var end = start.AddMonths(1);
+                var total = await _db.HakedisList
+                    .Where(h => h.Job != null && h.Job.TenantId == tenantId && h.CreatedAt >= start && h.CreatedAt < end)
+                    .SumAsync(h => h.NetAmount, ct);
+                monthlyBreakdown.Add(new { month = start.ToString("yyyy-MM"), label = start.ToString("MM/yyyy"), total });
+            }
+
             return Ok(new
             {
                 totalCranes,
@@ -50,7 +62,8 @@ public class DashboardController : ControllerBase
                 activeJobs,
                 monthlyIncome,
                 monthlyFuel,
-                monthlyMaintenance
+                monthlyMaintenance,
+                monthlyIncomeBreakdown = monthlyBreakdown
             });
         }
 

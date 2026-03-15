@@ -36,5 +36,19 @@ public static class DbSeed
 
         tenant.OwnerAdminId = adminUser.Id;
         await db.SaveChangesAsync(cancellationToken);
+
+        if (!await db.LandingPageSettings.AnyAsync(cancellationToken))
+        {
+            db.LandingPageSettings.Add(new LandingPageSetting
+            {
+                Id = 1,
+                HeroTitle = "Vinç Yönetim Sistemi ile tüm operasyonlarınızı tek panelden yönetin",
+                HeroDescription = "Vinç kiralama, operatör yönetimi, hakediş, şantiye takibi ve mobil saha uygulaması ile tüm süreçleri dijital yönetin.",
+                ContactEmail = "info@vincyonetim.com",
+                FooterText = "© Vinç Yönetim Sistemi. Tüm hakları saklıdır.",
+                UpdatedAt = DateTime.UtcNow
+            });
+            await db.SaveChangesAsync(cancellationToken);
+        }
     }
 }

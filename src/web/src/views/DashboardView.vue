@@ -1,10 +1,17 @@
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import api from '../services/api'
 
 const data = ref(null)
 const loading = ref(true)
 const error = ref('')
+
+const chartMax = computed(() => {
+  const arr = data.value?.monthlyIncomeBreakdown
+  if (!arr?.length) return 1
+  const max = Math.max(...arr.map((x) => Number(x.total)))
+  return max > 0 ? max : 1
+})
 
 onMounted(async () => {
   try {
@@ -69,6 +76,18 @@ onMounted(async () => {
         <span class="value">{{ data.hakedisSummary?.toLocaleString('tr-TR') }}</span>
       </div>
     </div>
+    <div v-if="data?.monthlyIncomeBreakdown?.length" class="chart-section">
+      <h3>Son 6 ay gelir (₺)</h3>
+      <div class="chart-bars">
+        <div v-for="item in data.monthlyIncomeBreakdown" :key="item.month" class="chart-row">
+          <span class="chart-label">{{ item.label }}</span>
+          <div class="chart-bar-wrap">
+            <div class="chart-bar" :style="{ width: (Number(item.total) / chartMax * 100) + '%' }" />
+          </div>
+          <span class="chart-value">{{ Number(item.total).toLocaleString('tr-TR') }}</span>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -86,4 +105,12 @@ onMounted(async () => {
 .card.wide { grid-column: span 2; }
 .card .label { font-size: 0.8rem; color: #666; }
 .card .value { font-size: 1.25rem; font-weight: 600; }
+.chart-section { margin-top: 1.5rem; background: #fff; padding: 1.25rem; border-radius: 8px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); max-width: 560px; }
+.chart-section h3 { margin: 0 0 1rem; font-size: 1.1rem; }
+.chart-bars { display: flex; flex-direction: column; gap: 0.5rem; }
+.chart-row { display: grid; grid-template-columns: 72px 1fr 80px; align-items: center; gap: 0.75rem; }
+.chart-label { font-size: 0.85rem; color: #555; }
+.chart-bar-wrap { height: 24px; background: #f0f2f5; border-radius: 4px; overflow: hidden; }
+.chart-bar { height: 100%; background: #1e3a5f; border-radius: 4px; min-width: 2px; transition: width 0.3s ease; }
+.chart-value { font-size: 0.85rem; font-weight: 600; text-align: right; }
 </style>

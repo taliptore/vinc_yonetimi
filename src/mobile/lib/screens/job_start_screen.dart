@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:image_picker/image_picker.dart';
 import '../services/api_service.dart';
 
 class JobStartScreen extends StatefulWidget {
@@ -45,6 +46,25 @@ class _JobStartScreenState extends State<JobStartScreen> {
       await _api.jobStart(id, pos.latitude, pos.longitude);
       if (!mounted) return;
       setState(() => _message = 'İş başlatıldı.');
+    } catch (e) {
+      if (mounted) setState(() => _message = e.toString().replaceFirst('Exception: ', ''));
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  Future<void> _addPhoto() async {
+    final job = widget.job ?? ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
+    final id = job?['id'] as int?;
+    if (id == null) return;
+    final picker = ImagePicker();
+    final xFile = await picker.pickImage(source: ImageSource.camera, imageQuality: 85);
+    if (xFile == null || !mounted) return;
+    setState(() => _loading = true);
+    _message = null;
+    try {
+      await _api.uploadJobPhoto(id, xFile.path);
+      if (mounted) setState(() => _message = 'Fotoğraf yüklendi.');
     } catch (e) {
       if (mounted) setState(() => _message = e.toString().replaceFirst('Exception: ', ''));
     } finally {
@@ -104,6 +124,12 @@ class _JobStartScreenState extends State<JobStartScreen> {
               icon: const Icon(Icons.stop),
               label: const Text('İş bitir (GPS doğrula)'),
               style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
+            ),
+            const SizedBox(height: 12),
+            OutlinedButton.icon(
+              onPressed: _loading ? null : _addPhoto,
+              icon: const Icon(Icons.camera_alt),
+              label: const Text('Fotoğraf ekle'),
             ),
           ],
         ),

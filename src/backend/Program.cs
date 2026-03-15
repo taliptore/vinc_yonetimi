@@ -59,7 +59,12 @@ builder.Services.AddHealthChecks()
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
-    c.SwaggerDoc("v1", new OpenApiInfo { Title = "Vinç Yönetim API", Version = "v1" });
+    c.SwaggerDoc("v1", new OpenApiInfo
+    {
+        Title = "Vinç Yönetim API",
+        Version = "v1",
+        Description = "Multi-tenant vinç kiralama ve iş takip API. Tüm isteklerde JWT Bearer token gerekir (login hariç). Veriler tenant bazlı filtrelenir."
+    });
     c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
         In = ParameterLocation.Header,
@@ -81,6 +86,8 @@ app.UseSwagger();
 app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "Vinç Yönetim API v1"));
 
 app.UseHttpsRedirection();
+app.UseStaticFiles();
+app.UseMiddleware<LoginRateLimitMiddleware>();
 app.UseMiddleware<CorrelationIdMiddleware>();
 app.UseSerilogRequestLogging();
 app.UseAuthentication();

@@ -35,6 +35,8 @@ public class ApplicationDbContext : DbContext
     public DbSet<Contract> Contracts => Set<Contract>();
     public DbSet<Invoice> Invoices => Set<Invoice>();
     public DbSet<JobPhoto> JobPhotos => Set<JobPhoto>();
+    public DbSet<LandingPageSetting> LandingPageSettings => Set<LandingPageSetting>();
+    public DbSet<Announcement> Announcements => Set<Announcement>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -66,6 +68,7 @@ public class ApplicationDbContext : DbContext
             e.Property(x => x.Email).HasMaxLength(256);
             e.Property(x => x.PasswordHash).HasMaxLength(500);
             e.Property(x => x.PasswordResetToken).HasMaxLength(200);
+            e.Property(x => x.DisplayName).HasMaxLength(200);
             e.HasIndex(x => new { x.TenantId, x.Email }).IsUnique();
             e.HasOne(x => x.Tenant).WithMany().HasForeignKey(x => x.TenantId).OnDelete(DeleteBehavior.Restrict);
             e.HasOne(x => x.Role).WithMany(r => r.Users).HasForeignKey(x => x.RoleId).OnDelete(DeleteBehavior.Restrict);
@@ -183,6 +186,17 @@ public class ApplicationDbContext : DbContext
         {
             e.HasKey(x => x.Id);
             e.HasOne(x => x.Job).WithMany().HasForeignKey(x => x.JobId).OnDelete(DeleteBehavior.Cascade);
+        });
+        modelBuilder.Entity<LandingPageSetting>(e =>
+        {
+            e.HasKey(x => x.Id);
+            e.Property(x => x.HeroTitle).HasMaxLength(500);
+            e.Property(x => x.ContactEmail).HasMaxLength(256);
+        });
+        modelBuilder.Entity<Announcement>(e =>
+        {
+            e.HasKey(x => x.Id);
+            e.Property(x => x.Title).HasMaxLength(300);
         });
 
         // Seed roller: Admin=1, Muhasebe=2, Operatör=3, Firma=4

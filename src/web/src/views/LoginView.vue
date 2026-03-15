@@ -16,7 +16,7 @@ async function submit() {
   loading.value = true
   try {
     await auth.login(email.value, password.value)
-    const redirect = route.query.redirect || '/'
+    const redirect = route.query.redirect || '/app'
     router.push(redirect)
   } catch (e) {
     error.value = e.response?.data?.message || 'Giriş başarısız.'
@@ -27,57 +27,53 @@ async function submit() {
 </script>
 
 <template>
-  <div class="login-page">
-    <div class="login-card">
-      <h1>Vinç Yönetim</h1>
-      <p class="subtitle">Panele giriş yapın</p>
-      <form @submit.prevent="submit" class="form">
-        <input v-model="email" type="email" placeholder="E-posta" required autocomplete="email" />
-        <input v-model="password" type="password" placeholder="Şifre" required autocomplete="current-password" />
-        <p v-if="error" class="error">{{ error }}</p>
-        <button type="submit" :disabled="loading">{{ loading ? 'Giriş yapılıyor...' : 'Giriş' }}</button>
+  <div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 px-4">
+    <div class="w-full max-w-md bg-white rounded-2xl shadow-xl p-8">
+      <div class="text-center mb-8">
+        <router-link to="/" class="text-xl font-bold text-slate-800">Vinç Yönetim</router-link>
+        <p class="text-slate-500 mt-1">Panele giriş yapın</p>
+      </div>
+      <form @submit.prevent="submit" class="space-y-5">
+        <div>
+          <label for="email" class="block text-sm font-medium text-slate-700 mb-1">E-posta</label>
+          <input
+            id="email"
+            v-model="email"
+            type="email"
+            required
+            autocomplete="email"
+            class="w-full px-4 py-3 rounded-xl border border-slate-300 focus:ring-2 focus:ring-slate-500 focus:border-slate-500"
+            placeholder="ornek@firma.com"
+          />
+        </div>
+        <div>
+          <label for="password" class="block text-sm font-medium text-slate-700 mb-1">Şifre</label>
+          <input
+            id="password"
+            v-model="password"
+            type="password"
+            required
+            autocomplete="current-password"
+            class="w-full px-4 py-3 rounded-xl border border-slate-300 focus:ring-2 focus:ring-slate-500 focus:border-slate-500"
+            placeholder="••••••••"
+          />
+        </div>
+        <p v-if="error" class="text-sm text-red-600">{{ error }}</p>
+        <button
+          type="submit"
+          :disabled="loading"
+          class="w-full py-3 rounded-xl bg-slate-800 text-white font-medium hover:bg-slate-700 disabled:opacity-70 disabled:cursor-not-allowed transition-colors"
+        >
+          {{ loading ? 'Giriş yapılıyor...' : 'Giriş Yap' }}
+        </button>
       </form>
+      <p class="mt-6 text-center text-slate-500 text-sm">
+        Hesabınız yok mu?
+        <router-link to="/register" class="text-slate-800 font-medium hover:underline">Hesap oluştur</router-link>
+      </p>
+      <p class="mt-2 text-center">
+        <router-link to="/" class="text-slate-500 text-sm hover:underline">← Ana sayfaya dön</router-link>
+      </p>
     </div>
   </div>
 </template>
-
-<style scoped>
-.login-page {
-  min-height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: linear-gradient(135deg, #1e3a5f 0%, #2d5a87 100%);
-}
-.login-card {
-  background: #fff;
-  padding: 2rem 2.5rem;
-  border-radius: 12px;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.2);
-  width: 100%;
-  max-width: 380px;
-}
-.login-card h1 { margin: 0 0 0.25rem; font-size: 1.5rem; color: #1e3a5f; }
-.subtitle { margin: 0 0 1.5rem; color: #666; font-size: 0.9rem; }
-.form input {
-  display: block;
-  width: 100%;
-  padding: 0.6rem 0.75rem;
-  margin-bottom: 0.75rem;
-  border: 1px solid #ccc;
-  border-radius: 6px;
-  box-sizing: border-box;
-}
-.form button {
-  width: 100%;
-  padding: 0.7rem;
-  background: #1e3a5f;
-  color: #fff;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 1rem;
-}
-.form button:disabled { opacity: 0.7; cursor: not-allowed; }
-.error { color: #c00; font-size: 0.85rem; margin: 0 0 0.5rem; }
-</style>
