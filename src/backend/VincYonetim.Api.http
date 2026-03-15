@@ -1,0 +1,6 @@
+@VincYonetim.Api_HostAddress = http://localhost:5042
+
+GET {{VincYonetim.Api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
